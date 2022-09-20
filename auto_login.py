@@ -33,7 +33,7 @@ def login(driver):
         print("登录失败")
         t = input("是否删除账户密码信息(y/n):")
         if t == 'y':
-            config_path = os.path.dirname(__file__) + '\\al-config.json'
+            config_path = get_configfile_path()
             if os.path.exists(config_path):
                 os.remove(config_path)
                 click.secho("已删除配置文件al-config.json", fg='red')
@@ -83,9 +83,19 @@ def reconnect():
         exit(0)
 
 
+def get_configfile_path() -> str:
+    filename = 'al-config.json'
+    # 判断是冻结exe还是脚本
+    if hasattr(sys, 'frozen'):
+        p = os.path.dirname(sys.executable)
+    else:
+        p = os.path.dirname(__file__)
+    return os.path.join(p, filename)
+
+
 def init_param():
     global username, password, company
-    config_path = os.path.dirname(__file__) + '\\al-config.json'
+    config_path = get_configfile_path()
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             j = json.load(f)
@@ -99,7 +109,7 @@ def init_param():
             user = input('请输入用户名:')
             pwd = input('请输入密码:')
             com = input('请输入运营商(校园网/中国移动/中国联通/中国电信):')
-            print('*'*20)
+            print('*' * 20)
             print(f"用户名:{user}\n密码:{pwd}\n运营商:{com}")
             flag = input('是否保存(y/n):')
             if flag == 'y':
@@ -111,6 +121,7 @@ def init_param():
         jsonstr = {'username': username, 'password': password, 'company': company}
         with open(config_path, 'w') as f:
             json.dump(jsonstr, f)
+        click.secho(config_path, fg='green')
 
 
 if __name__ == '__main__':
@@ -127,10 +138,10 @@ if __name__ == '__main__':
         else:
             print("当前为普通用户权限")
         click.secho("无法访问目标网站", fg='red')
-        print('*'*20)
+        print('*' * 20)
         print('1.重启以太网端口')
         print('其他.退出')
-        print('*'*20)
+        print('*' * 20)
         fun = input("请输入：")
         if fun == "1":
             reconnect()
