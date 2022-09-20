@@ -2,6 +2,8 @@
 hbut校园网自动连接脚本
 使用的selenium编写的脚本
 
+exe程序仅支持windows，需要下载对应版本的chromedriver驱动并配置环境变量
+
 [chrome驱动下载地址](https://chromedriver.chromium.org/downloads)
 
 
