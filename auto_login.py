@@ -26,7 +26,7 @@ def login(driver):
     sl.select_by_visible_text(company)
     el = driver.find_element(by=By.XPATH, value='//button[@id="login-account"]')
     el.click()
-    time.sleep(0.5)
+    time.sleep(1)
     if driver.current_url == 'http://202.114.177.246/srun_portal_success?ac_id=1&theme=pro':
         print("登录成功")
     else:
@@ -46,10 +46,10 @@ def login(driver):
 def logout(driver):
     el = driver.find_element(by=By.XPATH, value='//button[@id="logout"]')
     el.click()
-    time.sleep(0.5)
+    time.sleep(1)
     el = driver.find_element(by=By.XPATH, value='//button[@class="btn-confirm"]')
     el.click()
-    time.sleep(0.5)
+    time.sleep(1)
     print('已注销')
 
 
@@ -80,7 +80,7 @@ def reconnect():
         # 用管理员权限重新运行（新开一个窗口）
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
         # 关闭当前的窗口
-        exit(0)
+        sys.exit(0)
 
 
 def get_configfile_path() -> str:
@@ -146,7 +146,7 @@ if __name__ == '__main__':
         if fun == "1":
             reconnect()
         else:
-            exit(1)
+            sys.exit(1)
     driver = webdriver.Chrome(options=option)
     driver.set_page_load_timeout(10)  # 页面加载超时时间
     driver.set_script_timeout(10)  # 页面js加载超时时间
