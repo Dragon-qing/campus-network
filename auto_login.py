@@ -30,10 +30,10 @@ def login(driver):
     el = driver.find_element(by=By.XPATH, value='//button[@id="login-account"]')
     el.click()
     time.sleep(0.8)
-    if driver.current_url == 'http://202.114.177.246/srun_portal_success?ac_id=1&theme=pro':
+    if re.search(r'srun_portal_success', driver.current_url) is not None:
         print("登录成功")
     else:
-        print("登录失败")
+        click.secho("登录失败", fg='red')
         t = input("是否删除账户密码信息(y/n):")
         if t == 'y':
             config_path = get_configfile_path()
@@ -53,7 +53,10 @@ def logout(driver):
     el = driver.find_element(by=By.XPATH, value='//button[@class="btn-confirm"]')
     el.click()
     time.sleep(0.8)
-    print('已注销')
+    if re.search(r'srun_portal_pc', driver.current_url) is not None:
+        print('已注销')
+    else:
+        click.secho('注销失败', fg='red')
 
 
 # 判断当前的用户权限
