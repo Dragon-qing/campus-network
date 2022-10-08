@@ -7,6 +7,9 @@ from selenium.webdriver.chrome.options import Options
 import psutil
 import requests
 import json
+import re
+import asyncio
+import aioconsole
 
 url = 'http://202.114.177.246'
 username = '用户名'
@@ -26,7 +29,7 @@ def login(driver):
     sl.select_by_visible_text(company)
     el = driver.find_element(by=By.XPATH, value='//button[@id="login-account"]')
     el.click()
-    time.sleep(1)
+    time.sleep(0.8)
     if driver.current_url == 'http://202.114.177.246/srun_portal_success?ac_id=1&theme=pro':
         print("登录成功")
     else:
@@ -46,10 +49,10 @@ def login(driver):
 def logout(driver):
     el = driver.find_element(by=By.XPATH, value='//button[@id="logout"]')
     el.click()
-    time.sleep(1)
+    time.sleep(0.8)
     el = driver.find_element(by=By.XPATH, value='//button[@class="btn-confirm"]')
     el.click()
-    time.sleep(1)
+    time.sleep(0.8)
     print('已注销')
 
 
@@ -62,6 +65,7 @@ def is_admin():
         return False
 
 
+# 断开重连以太网
 def reconnect():
     if is_admin():
         disable_cmd = 'netsh interface set interface 以太网 disabled'
@@ -123,13 +127,21 @@ def init_param():
             json.dump(jsonstr, f)
         click.secho(config_path, fg='green')
 
-
+async def input_func(loop):
+    t = loop.create_task(aioconsole.ainput('是否注销重连(y/n,5s后默认为否):'))
+    try:
+        await asyncio.wait_for(t, timeout=5)
+        value = t.result()
+    except asyncio.TimeoutError as _:
+        value = 'n'
+    return value
 if __name__ == '__main__':
+
     init_param()
     # 初始化
     option = Options()
     option.add_argument('--headless')
-
+    loop = asyncio.get_event_loop()
     try:
         resp = requests.get(url, timeout=4)
     except:
@@ -142,7 +154,7 @@ if __name__ == '__main__':
         print('1.重启以太网端口')
         print('其他.退出')
         print('*' * 20)
-        fun = input("请输入：")
+        fun = input('请输入:')
         if fun == "1":
             reconnect()
         else:
@@ -152,20 +164,23 @@ if __name__ == '__main__':
     driver.set_script_timeout(10)  # 页面js加载超时时间
     try:
         driver.get(url)
-        time.sleep(1)
-
-        if driver.current_url == 'http://202.114.177.246/srun_portal_success?ac_id=1&theme=pro':
-            print('已经登录')
-            s = input("是否注销重连(y/n):")
+        time.sleep(0.8)
+        # 处理已经已经登录的情况
+        if re.search(r'srun_portal_success', driver.current_url) is not None:
+            click.secho('已经登录', fg='green')
+            # 使用异步操作，实现定时输入
+            s = loop.run_until_complete(input_func(loop))
             if s.lower() == 'y':
                 logout(driver)
                 login(driver)
             elif s.lower() == 'n':
                 pass
-
-        elif driver.current_url == 'http://202.114.177.246/srun_portal_pc?ac_id=1&theme=pro':
+        # 未登录情况
+        elif re.search(r'srun_portal_pc', driver.current_url) is not None:
             login(driver)
     except Exception as e:
         print(e)
     finally:
+        # 释放资源
+        loop.close()
         driver.quit()
